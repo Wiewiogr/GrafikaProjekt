@@ -40,15 +40,32 @@ add_definitions(
 	-D_CRT_SECURE_NO_WARNINGS
 )
 
-add_executable(projektGrafika 
+add_executable(projektGrafika
 	projektGrafika/tutorial01.cpp
+	common/shader.cpp
+	common/shader.hpp
+	common/controls.cpp
+	common/controls.hpp
+	common/texture.cpp
+	common/texture.hpp
+	common/objloader.cpp
+	common/objloader.hpp
+	common/vboindexer.cpp
+	common/vboindexer.hpp
+	common/text2D.hpp
+	common/text2D.cpp
+	
+	projektGrafika/StandardShadingRTT.vertexshader
+	projektGrafika/StandardShadingRTT.fragmentshader
+	projektGrafika/Passthrough.vertexshader
+	projektGrafika/WobblyTexture.fragmentshader
 )
 target_link_libraries(projektGrafika
 	${ALL_LIBS}
 )
 
 # Xcode and Visual working directories
-set_target_properties(projektGrafika PROPERTIES XCODE_ATTRIBUTE_CONFIGURATION_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tutorial01_first_window/")
+set_target_properties(projektGrafika PROPERTIES XCODE_ATTRIBUTE_CONFIGURATION_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/projektGrafika/")
 create_target_launcher(projektGrafika WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/projektGrafika/")
 
 
