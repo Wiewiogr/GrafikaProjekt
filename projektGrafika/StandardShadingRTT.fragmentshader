@@ -1,13 +1,13 @@
 #version 330 core
 
-//in vec2 UV;
+in vec2 UV;
 
 out vec3 color;
 
 uniform sampler2D front;
 
 void main(){
-	color = texture(front,vec2(gl_FragCoord.xy)).xyz ;
+	gl_FragColor = texture(front,UV);
         //color = vec3(time,0.5,1-time);
 	//color = vec3(0.72,0.5,0.3);//texture( renderedTexture, UV + 0.005*vec2( sin(time+1024.0*UV.x),cos(time+768.0*UV.y)) ).xyz ;
 	//color = texture( renderedTexture, UV + 0.005*vec2( sin(time+1024.0*UV.x),cos(time+768.0*UV.y)) ).xyz ;

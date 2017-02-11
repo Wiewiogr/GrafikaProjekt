@@ -1,6 +1,7 @@
 // Include standard headers
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctime>
 #include <vector>
 
 // Include GLEW
@@ -22,9 +23,10 @@ using namespace glm;
 #include <common/vboindexer.hpp>
 
 
-GLuint createTexture(int width, int height, unsigned char * data)
+GLuint createTexture(int width, int height, GLubyte * data)
 {
     GLuint renderedTexture;
+    glEnable(GL_TEXTURE_2D);
     glGenTextures(1, &renderedTexture);
     // "Bind" the newly created texture : all future texture functions will modify this texture
     glBindTexture(GL_TEXTURE_2D, renderedTexture);
@@ -44,6 +46,7 @@ GLuint createTexture(int width, int height, unsigned char * data)
 
 int main( void )
 {
+    srand( time( NULL ) );
     // Initialise GLFW
     if( !glfwInit() )
     {
@@ -83,10 +86,12 @@ int main( void )
         return -1;
     }
 
+    GLuint VertexArrayID;
+    glGenVertexArrays(1, &VertexArrayID);
+    glBindVertexArray(VertexArrayID);
     // Ensure we can capture the escape key being pressed below
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
     // Hide the mouse and enable unlimited mouvement
-//    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     
     // Set the mouse at the center of the screen
     glfwPollEvents();
@@ -103,10 +108,8 @@ int main( void )
     // Cull triangles which normal is not towards the camera
     glEnable(GL_CULL_FACE);
 
-    GLuint VertexArrayID;
-    glGenVertexArrays(1, &VertexArrayID);
-    glBindVertexArray(VertexArrayID);
-
+    GLuint programID = LoadShaders( "StandardShadingRTT.vertexshader", "StandardShadingRTT.fragmentshader" );
+    GLuint quad_programID = LoadShaders( "Passthrough.vertexshader", "WobblyTexture.fragmentshader" );
     // ---------------------------------------------
     // Render to Texture - specific code begins here
     // ---------------------------------------------
@@ -114,20 +117,22 @@ int main( void )
     // The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
     // The texture we're going to render to
 
-    unsigned char* data = (unsigned char*)malloc(windowWidth*windowHeight*3*sizeof(unsigned char));
+    GLubyte a;
+    GLubyte* data = (GLubyte*)malloc(windowWidth*windowHeight*4*sizeof(GLubyte));
     int val;
     for( int i = 0; i < windowWidth*windowHeight; i++)
     {
-        if ((rand() % 100)> 50 ) val = 255; else val = 0;
+       // if ((rand() % 100)> 50 ) val = 200; else val = 10;
+        val = rand() % 255;
         data[i*3] = data[i*3+1] = data[i*3+2] = val;
     }
 
 //    for(int i = 0; i < windowWidth*windowHeight*3; i++)
 //    {
-//        printf("%d\n", data[i]);
+//        printf("[%d] : %d\n",i, data[i]);
 //    }
-    GLuint front = createTexture(windowWidth, windowHeight, data);
-    GLuint back = createTexture(windowWidth, windowHeight, data);
+    GLuint front = createTexture(windowWidth, windowHeight, 0);
+    GLuint back = createTexture(windowWidth, windowHeight, 0);
 
     GLuint frontFBO = 0;
     glGenFramebuffers(1, &frontFBO);
@@ -161,10 +166,7 @@ int main( void )
     glGenBuffers(1, &quad_vertexbuffer);
     glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(g_quad_vertex_buffer_data), g_quad_vertex_buffer_data, GL_STATIC_DRAW);
-    GLuint programID = LoadShaders( "StandardShadingRTT.vertexshader", "StandardShadingRTT.fragmentshader" );
 
-    // Create and compile our GLSL program from the shaders
-    GLuint quad_programID = LoadShaders( "Passthrough.vertexshader", "WobblyTexture.fragmentshader" );
     GLuint backID = glGetUniformLocation(quad_programID, "back");
     GLuint texID = glGetUniformLocation(quad_programID, "front");
     GLuint timeID = glGetUniformLocation(quad_programID, "time");
@@ -196,12 +198,12 @@ int main( void )
             glEnableVertexAttribArray(0);
             glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
             glVertexAttribPointer(
-                0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-                3,                  // size
-                GL_FLOAT,           // type
-                GL_FALSE,           // normalized?
-                0,                  // stride
-                (void*)0            // array buffer offset
+              0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+              3,                  // size
+              GL_FLOAT,           // type
+              GL_FALSE,           // normalized?
+              0,                  // stride
+              (void*)0            // array buffer offset
             );
 
             // Draw the triangles !
@@ -255,14 +257,14 @@ int main( void )
 
         // Bind our texture in Texture Unit 0
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, front);
+        glBindTexture(GL_TEXTURE_2D, back);
         // Set our "front" sampler to user Texture Unit 0
         glUniform1i(texID, 0);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, front);
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
+        glEnableVertexAttribArray(0) ;
+       glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
         glVertexAttribPointer(
             0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
             3,                  // size
