@@ -217,8 +217,7 @@ int main( void )
     GLuint quad_programID = LoadShaders( "Passthrough.vertexshader", "WobblyTexture.fragmentshader" );
     GLuint texID = glGetUniformLocation(quad_programID, "renderedTexture");
     GLuint timeID = glGetUniformLocation(quad_programID, "time");
-    
-    
+
     do{
         // Render to our framebuffer
         glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);

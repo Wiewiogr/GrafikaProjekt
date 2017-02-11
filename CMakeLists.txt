@@ -41,7 +41,7 @@ add_definitions(
 )
 
 add_executable(projektGrafika
-	projektGrafika/tutorial01.cpp
+	projektGrafika/main.cpp
 	common/shader.cpp
 	common/shader.hpp
 	common/controls.cpp
