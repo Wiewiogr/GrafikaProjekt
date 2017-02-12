@@ -138,8 +138,49 @@ int main( void )
 //    {
 //        printf("[%d] : %d\n",i, data[i]);
 //    }
-    GLuint front = createTexture(windowWidth, windowHeight, data);
-    GLuint back = createTexture(windowWidth, windowHeight, 0);
+
+//    GLenum DrawBuffers[2] = {GL_COLOR_ATTACHMENT0_EXT,GL_COLOR_ATTACHMENT1_EXT};
+//    glDrawBuffers(2, DrawBuffers); // "1" is the size of DrawBuffers
+//    /////start
+//    GLuint FboID;
+//    GLuint TexID[2];
+//    int CurrActiveBuffer = 0;  // Current active buffer index
+//
+//    glGenFramebuffersEXT( 1, &FboID );
+//    glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, FboID );
+//
+//    // Create 2 textures for input/output.
+//    glGenTextures( 2, TexID );
+//
+//    for( int i=0; i<2; i++ )
+//    {
+//        glBindTexture( GL_TEXTURE_2D, TexID[i] );
+//        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+//        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+//        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+//        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+//        // RGBA8 buffer
+//        if( i == 0)
+//            glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, windowWidth, windowHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0 );
+//        else
+//            glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, windowWidth, windowHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, data );
+//
+//        //if( _hasMipmapping )  glGenerateMipmapEXT( GL_TEXTURE_2D );
+//    }
+//
+//    // Now attach textures to FBO
+//    int src = CurrActiveBuffer;
+//    int dest = 1-CurrActiveBuffer;
+//    glFramebufferTexture2DEXT( GL_FRAMEBUFFER_EXT, 
+//            GL_COLOR_ATTACHMENT0_EXT, 
+//            GL_TEXTURE_2D, TexID[src], 0 );
+//    glFramebufferTexture2DEXT( GL_FRAMEBUFFER_EXT, 
+//            GL_COLOR_ATTACHMENT1_EXT, 
+//            GL_TEXTURE_2D, TexID[dest], 0 );
+
+    ///end
+    GLuint front = createTexture(windowWidth, windowHeight, 0);
+    GLuint back = createTexture(windowWidth, windowHeight, data);
 
     GLuint frontFBO = 0;
     glGenFramebuffers(1, &frontFBO);
@@ -151,9 +192,7 @@ int main( void )
     glBindFramebuffer(GL_FRAMEBUFFER, backFBO);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, back, 0);
 
-//    // Set the list of draw buffers.
-//    GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
-//    glDrawBuffers(1, DrawBuffers); // "1" is the size of DrawBuffers
+    // Set the list of draw buffers.
 
     // Always check that our framebuffer is ok
     if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -189,8 +228,82 @@ int main( void )
     int number = 0;
     int counter = 0;
     do{
-        // Render to the screen
-        if(number++ % 100 == 0)
+//        int src = CurrActiveBuffer;
+//        int dest = 1-CurrActiveBuffer;
+//        {
+//            glDrawBuffer(DrawBuffers[dest]);
+//            glBindFramebuffer(GL_FRAMEBUFFER, FboID);
+//
+//            // Render on the whole framebuffer, complete from the lower left corner to the upper right
+//
+//            glViewport(0,0,windowWidth,windowHeight);
+//            // Clear the screen
+//            glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//
+//            // Use our shader
+//            glUseProgram(quad_programID);
+//
+//            // Bind our texture in Texture Unit 0
+//            glActiveTexture(GL_TEXTURE0 +src);
+//            glBindTexture(GL_TEXTURE_2D, TexID[src]);
+//            // Set our "front" sampler to user Texture Unit 0
+//            glUniform1i(texID, 0);
+//
+//            number %= 100;
+//            glUniform1f(timeID, (float)((number++)/100.0) );
+//            //glDrawBuffer(DrawBuffers[dest]);
+//            glEnableVertexAttribArray(0);
+//            glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
+//            glVertexAttribPointer(
+//              0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+//              3,                  // size
+//              GL_FLOAT,           // type
+//              GL_FALSE,           // normalized?
+//              0,                  // stride
+//              (void*)0            // array buffer offset
+//            );
+//
+//            // Draw the triangles !
+//            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4); // 2*3 indices starting at 0 -> 2 triangles
+//
+//            glDisableVertexAttribArray(0);
+//            glUseProgram(0);
+//        }
+//
+//        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+//        glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//        glUseProgram(programID);
+//
+//        // Bind our texture in Texture Unit 0
+//        glActiveTexture(GL_TEXTURE0+ src );
+//        glBindTexture(GL_TEXTURE_2D, TexID[src]);
+//        // Set our "front" sampler to user Texture Unit 0
+//        glUniform1i(texID, 0);
+//
+////        glActiveTexture(GL_TEXTURE0);
+////        glBindTexture(GL_TEXTURE_2D, TexID[src]);
+//        glEnableVertexAttribArray(0) ;
+//        glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
+//        glVertexAttribPointer(
+//            0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+//            3,                  // size
+//            GL_FLOAT,           // type
+//            GL_FALSE,           // normalized?
+//            0,                  // stride
+//            (void*)0            // array buffer offset
+//        );
+//
+//        // Draw the triangles !
+//        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4); // 2*3 indices starting at 0 -> 2 triangles
+//
+//        glDisableVertexAttribArray(0);
+//        // Swap buffers
+//        glfwSwapBuffers(window);
+//        glfwPollEvents();
+//        CurrActiveBuffer = 1 - CurrActiveBuffer;
+
+      // Render to the screen
+        if(number++ % 50 == 0)
         if(counter++ % 2 == 0)
         {
             glBindFramebuffer(GL_FRAMEBUFFER, frontFBO);
@@ -205,12 +318,13 @@ int main( void )
 
             // Bind our texture in Texture Unit 0
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, front);
+            glBindTexture(GL_TEXTURE_2D, back);
             // Set our "front" sampler to user Texture Unit 0
             glUniform1i(texID, 0);
 
             number %= 100;
-            glUniform1f(timeID, (float)((number++)/100.0) );
+            glUniform1f(timeID, 0.5);
+            //glUniform1f(timeID, (float)((number++)/100.0) );
             glEnableVertexAttribArray(0);
             glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
             glVertexAttribPointer(
@@ -230,6 +344,8 @@ int main( void )
         }
         else
         {
+
+            printf("dupa\n");
             glBindFramebuffer(GL_FRAMEBUFFER, backFBO);
             // Render on the whole framebuffer, complete from the lower left corner to the upper right
             glViewport(0,0,windowWidth,windowHeight);
@@ -242,12 +358,13 @@ int main( void )
 
             // Bind our texture in Texture Unit 0
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, back);
+            glBindTexture(GL_TEXTURE_2D, front);
             // Set our "front" sampler to user Texture Unit 0
             glUniform1i(backID, 0);
 
             number %= 100;
-            glUniform1f(timeID, (float)((number++)/100.0) );
+            glUniform1f(timeID, 2);
+            //glUniform1f(timeID, (float)((number++)/100.0) );
             glEnableVertexAttribArray(0);
             glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
             glVertexAttribPointer(
@@ -272,13 +389,18 @@ int main( void )
         glUseProgram(programID);
 
         // Bind our texture in Texture Unit 0
- //       glActiveTexture(GL_TEXTURE0+1 );
- //       glBindTexture(GL_TEXTURE_2D, back);
+//        glActiveTexture(GL_TEXTURE0);
+//        glBindTexture(GL_TEXTURE_2D, back);
         // Set our "front" sampler to user Texture Unit 0
         glUniform1i(texID, 0);
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, front);
+
+        if(counter % 2 == 1)
+            glBindTexture(GL_TEXTURE_2D, front);
+        else
+            glBindTexture(GL_TEXTURE_2D, back);
+
         glEnableVertexAttribArray(0) ;
         glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
         glVertexAttribPointer(
@@ -305,7 +427,8 @@ int main( void )
     // Cleanup VBO and shader
 
     glDeleteFramebuffers(1, &frontFBO);
-    glDeleteTextures(1, &front);
+    glDeleteTextures(1, &texID);
+    //glDeleteTextures(2, TexID);
     glDeleteBuffers(1, &quad_vertexbuffer);
     glDeleteVertexArrays(1, &VertexArrayID);
 

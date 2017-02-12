@@ -7,31 +7,35 @@ out vec3 color;
 uniform sampler2D front;
 uniform float time;
 
-int get(int x, int y) {
-    return int(texture(front, (UV + vec2(x, y)) / 4).r);
+float get(int x, int y) {
+    return texture(front, (UV + vec2(x, y)/1024) ).r;
 }
 
-void main(){
-	gl_FragColor = texture(front,UV);
-        //color = vec3(time,0.5,1-time);
-	//color = vec3(0.72,0.5,0.3);//texture( renderedTexture, UV + 0.005*vec2( sin(time+1024.0*UV.x),cos(time+768.0*UV.y)) ).xyz ;
-	//color = texture( front, UV + 0.005*vec2( sin(time+1024.0*UV.x),cos(time+768.0*UV.y)) ).xyz ;
-}
-//void main() {
-//    int sum = get(-1, -1) +
-//              get(-1,  0) +
-//              get(-1,  1) +
-//              get( 0, -1) +
-//              get( 0,  1) +
-//              get( 1, -1) +
-//              get( 1,  0) +
-//              get( 1,  1);
-//    if (sum == 3) {
-//        gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-//    } else if (sum == 2) {
-//        float current = float(get(0, 0));
-//        gl_FragColor = vec4(current, current, current, 1.0);
-//    } else {
-//        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-//    }
+//void main(){
+//        //color = vec3(time);
+//        //color = vec3(UV,1);
+//	gl_FragColor = texture(front,UV)*time;
+//        //color = vec3(time,0.5,1-time);
+//	//color = vec3(0.72,0.5,0.3);//texture( renderedTexture, UV + 0.005*vec2( sin(time+1024.0*UV.x),cos(time+768.0*UV.y)) ).xyz ;
+//	//color = texture( front, UV + 0.005*vec2( sin(time+1024.0*UV.x),cos(time+768.0*UV.y)) ).xyz ;
 //}
+void main() {
+    float sum = get(-1, -1) +
+              get(-1,  0) +
+              get(-1,  1) +
+              get( 0, -1) +
+              get( 0,  1) +
+              get( 1, -1) +
+              get( 1,  0) +
+              get( 1,  1);
+//    gl_FragColor = vec4(vec3(sum)/8.0,1);
+//      gl_FragColor = vec4(get(1,0));//texture(front,UV+vec2(1,0));
+    if (sum == 3) {
+        gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+    } else if (sum == 2) {
+        float current = float(get(0, 0));
+        gl_FragColor = vec4(current, current, current, 1.0);
+    } else {
+        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+    }
+}
