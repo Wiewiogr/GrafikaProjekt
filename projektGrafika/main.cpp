@@ -31,15 +31,13 @@ GLuint createTexture(int width, int height, GLubyte * data)
     // "Bind" the newly created texture : all future texture functions will modify this texture
     glBindTexture(GL_TEXTURE_2D, renderedTexture);
 
-    // Give an empty image to OpenGL ( the last "0" means "empty" )
-
     // Poor filtering
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, width, height, 0,GL_RGB, GL_UNSIGNED_BYTE, data);
+    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, width, height, 0,GL_RGBA, GL_UNSIGNED_BYTE, data);
     // Set "renderedTexture" as our colour attachement #0
     return renderedTexture;
 }
@@ -105,8 +103,8 @@ int main( void )
     // Accept fragment if it closer to the camera than the former one
     glDepthFunc(GL_LESS);
 
-    // Cull triangles which normal is not towards the camera
-    glEnable(GL_CULL_FACE);
+//    // Cull triangles which normal is not towards the camera
+//    glEnable(GL_CULL_FACE);
 
     GLuint programID = LoadShaders( "StandardShadingRTT.vertexshader", "StandardShadingRTT.fragmentshader" );
     GLuint quad_programID = LoadShaders( "Passthrough.vertexshader", "WobblyTexture.fragmentshader" );
@@ -124,14 +122,14 @@ int main( void )
     {
        // if ((rand() % 100)> 50 ) val = 200; else val = 10;
         val = rand() % 255;
-        data[i*3] = data[i*3+1] = data[i*3+2] = val;
+        data[i*4] = data[i*4+1] = data[i*4+2] = data[i*4+3]= val;
     }
 
 //    for(int i = 0; i < windowWidth*windowHeight*3; i++)
 //    {
 //        printf("[%d] : %d\n",i, data[i]);
 //    }
-    GLuint front = createTexture(windowWidth, windowHeight, 0);
+    GLuint front = createTexture(windowWidth, windowHeight, data);
     GLuint back = createTexture(windowWidth, windowHeight, 0);
 
     GLuint frontFBO = 0;
