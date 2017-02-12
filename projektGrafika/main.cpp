@@ -32,10 +32,10 @@ GLuint createTexture(int width, int height, GLubyte * data)
     glBindTexture(GL_TEXTURE_2D, renderedTexture);
 
     // Poor filtering
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 
     glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, width, height, 0,GL_RGBA, GL_UNSIGNED_BYTE, data);
     // Set "renderedTexture" as our colour attachement #0
@@ -84,6 +84,15 @@ int main( void )
         return -1;
     }
 
+    glDisable(GL_DITHER);
+    glDisable(GL_POINT_SMOOTH);
+    glDisable(GL_LINE_SMOOTH);
+    glDisable(GL_POLYGON_SMOOTH);
+    glHint(GL_POINT_SMOOTH, GL_DONT_CARE);
+    glHint(GL_LINE_SMOOTH, GL_DONT_CARE);
+    glHint(GL_POLYGON_SMOOTH_HINT, GL_DONT_CARE);
+    glDisable( GL_MULTISAMPLE_ARB) ;
+
     GLuint VertexArrayID;
     glGenVertexArrays(1, &VertexArrayID);
     glBindVertexArray(VertexArrayID);
@@ -96,7 +105,7 @@ int main( void )
     glfwSetCursorPos(window, 1024/2, 768/2);
 
     // Dark blue background
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     // Enable depth test
     glEnable(GL_DEPTH_TEST);
@@ -111,18 +120,18 @@ int main( void )
     // ---------------------------------------------
     // Render to Texture - specific code begins here
     // ---------------------------------------------
-
     // The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
+    //
     // The texture we're going to render to
 
-    GLubyte a;
     GLubyte* data = (GLubyte*)malloc(windowWidth*windowHeight*4*sizeof(GLubyte));
     int val;
     for( int i = 0; i < windowWidth*windowHeight; i++)
     {
-       // if ((rand() % 100)> 50 ) val = 200; else val = 10;
-        val = rand() % 255;
-        data[i*4] = data[i*4+1] = data[i*4+2] = data[i*4+3]= val;
+        if ((rand() % 100)> 50 ) val = 255; else val = 0;
+       // val = rand() % 255;
+        data[i*4] = data[i*4+1] = data[i*4+2] = val;
+        data[i*4+3]= 255;
     }
 
 //    for(int i = 0; i < windowWidth*windowHeight*3; i++)
@@ -149,15 +158,23 @@ int main( void )
     // Always check that our framebuffer is ok
     if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         return false;
-
     // The fullscreen quad's FBO
     static const GLfloat g_quad_vertex_buffer_data[] = { 
         -1.0f, -1.0f, 0.0f,
          1.0f, -1.0f, 0.0f,
         -1.0f,  1.0f, 0.0f,
-        -1.0f,  1.0f, 0.0f,
-         1.0f, -1.0f, 0.0f,
          1.0f,  1.0f, 0.0f,
+
+//        -1.0f, -1.0f, 0.0f,
+//         3.0f, -1.0f, 0.0f,
+//        -1.0f,  3.0f, 0.0f,
+
+//        -1.0f, -1.0f, 0.0f,
+//         1.0f, -1.0f, 0.0f,
+//        -1.0f,  1.0f, 0.0f,
+//        -1.0f,  1.0f, 0.0f,
+//         1.0f, -1.0f, 0.0f,
+//         1.0f,  1.0f, 0.0f,
     };
 
     GLuint quad_vertexbuffer;
@@ -173,6 +190,7 @@ int main( void )
     int counter = 0;
     do{
         // Render to the screen
+        if(number++ % 100 == 0)
         if(counter++ % 2 == 0)
         {
             glBindFramebuffer(GL_FRAMEBUFFER, frontFBO);
@@ -205,7 +223,7 @@ int main( void )
             );
 
             // Draw the triangles !
-            glDrawArrays(GL_TRIANGLES, 0, 6); // 2*3 indices starting at 0 -> 2 triangles
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4); // 2*3 indices starting at 0 -> 2 triangles
 
             glDisableVertexAttribArray(0);
             glUseProgram(0);
@@ -241,8 +259,8 @@ int main( void )
                 (void*)0            // array buffer offset
             );
 
-            // Draw the triangles !
-            glDrawArrays(GL_TRIANGLES, 0, 6); // 2*3 indices starting at 0 -> 2 triangles
+            // Draw the triangles 4
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4); // 2*3 indices starting at 0 -> 2 triangles
 
             glDisableVertexAttribArray(0);
             glUseProgram(0);
@@ -254,15 +272,15 @@ int main( void )
         glUseProgram(programID);
 
         // Bind our texture in Texture Unit 0
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, back);
+ //       glActiveTexture(GL_TEXTURE0+1 );
+ //       glBindTexture(GL_TEXTURE_2D, back);
         // Set our "front" sampler to user Texture Unit 0
         glUniform1i(texID, 0);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, front);
         glEnableVertexAttribArray(0) ;
-       glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
+        glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
         glVertexAttribPointer(
             0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
             3,                  // size
@@ -273,7 +291,7 @@ int main( void )
         );
 
         // Draw the triangles !
-        glDrawArrays(GL_TRIANGLES, 0, 6); // 2*3 indices starting at 0 -> 2 triangles
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4); // 2*3 indices starting at 0 -> 2 triangles
 
         glDisableVertexAttribArray(0);
         // Swap buffers

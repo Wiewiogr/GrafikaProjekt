@@ -7,7 +7,14 @@ layout(location = 0) in vec3 vertexPosition_modelspace;
 out vec2 UV;
 
 void main(){
+//    UV = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
+//    gl_Position = vec4(UV * 2.0f + -1.0f, 0.0f, 1.0f);
+//    float x = -1.0 + float((gl_VertexID & 1) << 2);
+//    float y = -1.0 + float((gl_VertexID & 2) << 1);
+//    UV.x = (x+1.0)*0.5;
+//    UV.y = (y+1.0)*0.5;
+//    gl_Position = vec4(x, y, 0, 1);
 	gl_Position =  vec4(vertexPosition_modelspace,1);
-	UV = (vertexPosition_modelspace.xy+vec2(1,1))/2;
+	UV = (vertexPosition_modelspace.xy*0.5)+vec2(0.5,0.5);
 }
 
