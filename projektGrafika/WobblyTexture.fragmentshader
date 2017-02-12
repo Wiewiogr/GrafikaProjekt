@@ -8,17 +8,9 @@ uniform sampler2D front;
 uniform float time;
 
 float get(int x, int y) {
-    return texture(front, (UV + vec2(x, y)/1024) ).r;
+    return texture(front, (UV + vec2(x, y)/768) ).r;
 }
 
-//void main(){
-//        //color = vec3(time);
-//        //color = vec3(UV,1);
-//	gl_FragColor = texture(front,UV)*time;
-//        //color = vec3(time,0.5,1-time);
-//	//color = vec3(0.72,0.5,0.3);//texture( renderedTexture, UV + 0.005*vec2( sin(time+1024.0*UV.x),cos(time+768.0*UV.y)) ).xyz ;
-//	//color = texture( front, UV + 0.005*vec2( sin(time+1024.0*UV.x),cos(time+768.0*UV.y)) ).xyz ;
-//}
 void main() {
     float sum = get(-1, -1) +
               get(-1,  0) +
@@ -28,8 +20,6 @@ void main() {
               get( 1, -1) +
               get( 1,  0) +
               get( 1,  1);
-//    gl_FragColor = vec4(vec3(sum)/8.0,1);
-//      gl_FragColor = vec4(get(1,0));//texture(front,UV+vec2(1,0));
     if (sum == 3) {
         gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
     } else if (sum == 2) {
