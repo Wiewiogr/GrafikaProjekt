@@ -1,4 +1,7 @@
 // Include standard headers
+#include <ctype.h>
+#include <unistd.h>
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctime>
@@ -57,8 +60,45 @@ void drawQuadVertexBuffer(GLuint vertexBuffer)
 
 int main( int argc, char* argv[] )
 {
-    if(argc > 1)
-        printf("%s\n",argv[1]);
+    int c;
+
+    glm::mat3 aliveCondition(0);
+    glm::mat3 deathCondition(0);
+    int scale = 1;
+    while ((c = getopt (argc, argv, "a:d:s:")) != -1)
+    {
+        switch (c)
+        {
+        case 'a':
+            for(int i = 0 ; i < strlen(optarg); i++)
+            {
+                int number = optarg[i]-48;
+                aliveCondition[number/3][number%3] = 1;
+            }
+            break;
+        case 'd':
+            for(int i = 0 ; i < strlen(optarg); i++)
+            {
+                int number = optarg[i]-48;
+                deathCondition[number/3][number%3] = 1;
+            }
+            break;
+        case 's':
+            scale = atoi(optarg);
+            break;
+        }
+    }
+
+    for(int i = 0 ; i < 9; i++)
+    {
+        printf("%d : %lf\n", i, aliveCondition[i/3][i%3]);
+    }
+    for(int i = 0 ; i < 9; i++)
+    {
+        printf("%d : %lf\n", i, deathCondition[i/3][i%3]);
+    }
+    printf("scale : %d\n",scale);
+
     srand( time( NULL ) );
     // Initialise GLFW
     if( !glfwInit() )
@@ -145,17 +185,16 @@ int main( int argc, char* argv[] )
          1.0f,  1.0f, 0.0f,
     };
 
-    glm::mat3 aliveCondition(0,0,1,1,0,0,0,0,0);
-    glm::mat3 deathCondition(0,0,0,1,0,0,0,0,0);
     GLuint quad_vertexbuffer;
     glGenBuffers(1, &quad_vertexbuffer);
     glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(g_quad_vertex_buffer_data), g_quad_vertex_buffer_data, GL_STATIC_DRAW);
 
-    GLuint textureID = glGetUniformLocation(quad_programID, "dupa");
+    GLuint textureID = glGetUniformLocation(quad_programID, "front");
     GLuint aliveConditionID = glGetUniformLocation(quad_programID, "aliveCondition");
     GLuint deathConditionID = glGetUniformLocation(quad_programID, "deathCondition");
     GLuint timeID = glGetUniformLocation(quad_programID, "time");
+    GLuint scaleID = glGetUniformLocation(programID, "scale");
 
     int currentTexture = 0;
     bool isActive = true;
@@ -185,6 +224,7 @@ int main( int argc, char* argv[] )
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUseProgram(programID);
+        glUniform1f(scaleID, float(1.0/scale));
         glUniform1i(textureID, 0);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, textures[!currentTexture]);
@@ -194,7 +234,10 @@ int main( int argc, char* argv[] )
         glfwSwapBuffers(window);
         glfwPollEvents();
         if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+        {
             isActive = !isActive;
+            printf("space pressed\n");
+        }
 
     } // Check if the ESC key was pressed or the window was closed
     while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS &&
