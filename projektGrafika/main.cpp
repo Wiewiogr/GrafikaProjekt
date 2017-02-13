@@ -39,8 +39,26 @@ GLuint createTexture(int width, int height, GLubyte * data)
     return renderedTexture;
 }
 
-int main( void )
+void drawQuadVertexBuffer(GLuint vertexBuffer)
 {
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+    glVertexAttribPointer(
+      0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+      3,                  // size
+      GL_FLOAT,           // type
+      GL_FALSE,           // normalized?
+      0,                  // stride
+      (void*)0            // array buffer offset
+    );
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4); // 2*3 indices starting at 0 -> 2 triangles
+    glDisableVertexAttribArray(0);
+}
+
+int main( int argc, char* argv[] )
+{
+    if(argc > 1)
+        printf("%s\n",argv[1]);
     srand( time( NULL ) );
     // Initialise GLFW
     if( !glfwInit() )
@@ -69,7 +87,7 @@ int main( void )
     // We would expect width and height to be 1024 and 768
     int windowWidth = 1024;
     int windowHeight = 768;
-    // But on MacOS X with a retina screen it'll be 1024*2 and 768*2, so we get the actual framebuffer size:
+
     glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
 
     // Initialize GLEW
@@ -91,13 +109,8 @@ int main( void )
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-    // Enable depth test
-    glEnable(GL_DEPTH_TEST);
-    // Accept fragment if it closer to the camera than the former one
-    glDepthFunc(GL_LESS);
-
-    GLuint programID = LoadShaders( "StandardShadingRTT.vertexshader", "StandardShadingRTT.fragmentshader" );
-    GLuint quad_programID = LoadShaders( "Passthrough.vertexshader", "WobblyTexture.fragmentshader" );
+    GLuint programID = LoadShaders( "Passthrough.vertexshader", "Passthrough.fragmentshader" );
+    GLuint quad_programID = LoadShaders( "GameOfLife.vertexshader", "GameOfLife.fragmentshader" );
 
     GLubyte* data = (GLubyte*)malloc(windowWidth*windowHeight*4*sizeof(GLubyte));
     int val;
@@ -125,100 +138,74 @@ int main( void )
     if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         return false;
     // The fullscreen quad's FBO
-    static const GLfloat g_quad_vertex_buffer_data[] = { 
+    static const GLfloat g_quad_vertex_buffer_data[] = {
         -1.0f, -1.0f, 0.0f,
          1.0f, -1.0f, 0.0f,
         -1.0f,  1.0f, 0.0f,
          1.0f,  1.0f, 0.0f,
     };
 
+    glm::mat3 aliveCondition(0,0,1,1,0,0,0,0,0);
+    glm::mat3 deathCondition(0,0,0,1,0,0,0,0,0);
     GLuint quad_vertexbuffer;
     glGenBuffers(1, &quad_vertexbuffer);
     glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(g_quad_vertex_buffer_data), g_quad_vertex_buffer_data, GL_STATIC_DRAW);
 
     GLuint textureID = glGetUniformLocation(quad_programID, "dupa");
+    GLuint aliveConditionID = glGetUniformLocation(quad_programID, "aliveCondition");
+    GLuint deathConditionID = glGetUniformLocation(quad_programID, "deathCondition");
     GLuint timeID = glGetUniformLocation(quad_programID, "time");
 
-    int number = 0;
-    int counter = 0;
     int currentTexture = 0;
+    bool isActive = true;
+    int number = 0;
     do{
-        if((++number % 50) == 0)
+        if((++number % 10) == 0 && isActive)
         {
             glBindFramebuffer(GL_FRAMEBUFFER, FBOs[currentTexture]);
-            // Render on the whole framebuffer, complete from the lower left corner to the upper right
             glViewport(0,0,windowWidth,windowHeight);
-
-            // Clear the screen
-            glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-            // Use our shader
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glUseProgram(quad_programID);
-
-            // Bind our texture in Texture Unit 0
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, textures[!currentTexture]);
+
             // Set our "front" sampler to user Texture Unit 0
+            glUniformMatrix3fv(aliveConditionID, 1, GL_FALSE, &aliveCondition[0][0]);
+            glUniformMatrix3fv(deathConditionID, 1, GL_FALSE, &deathCondition[0][0]);
             glUniform1i(textureID, 0);
 
             number %= 100;
             glUniform1f(timeID, 0.5);
-            glEnableVertexAttribArray(0);
-            glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
-            glVertexAttribPointer(
-              0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-              3,                  // size
-              GL_FLOAT,           // type
-              GL_FALSE,           // normalized?
-              0,                  // stride
-              (void*)0            // array buffer offset
-            );
-
-            // Draw the triangles !
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4); // 2*3 indices starting at 0 -> 2 triangles
-
-            glDisableVertexAttribArray(0);
+            drawQuadVertexBuffer(quad_vertexbuffer);
             glUseProgram(0);
             currentTexture = 1 - currentTexture;
         }
+
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUseProgram(programID);
         glUniform1i(textureID, 0);
         glActiveTexture(GL_TEXTURE0);
-
         glBindTexture(GL_TEXTURE_2D, textures[!currentTexture]);
 
-        glEnableVertexAttribArray(0) ;
-        glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
-        glVertexAttribPointer(
-            0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-            3,                  // size
-            GL_FLOAT,           // type
-            GL_FALSE,           // normalized?
-            0,                  // stride
-            (void*)0            // array buffer offset
-        );
-
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4); // 2*3 indices starting at 0 -> 2 triangles
-        glDisableVertexAttribArray(0);
+        drawQuadVertexBuffer(quad_vertexbuffer);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
+        if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+            isActive = !isActive;
 
     } // Check if the ESC key was pressed or the window was closed
     while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS &&
            glfwWindowShouldClose(window) == 0 );
 
-    // Cleanup VBO and shader
     glDeleteFramebuffers(2, FBOs);
     glDeleteTextures(2, textures);
     glDeleteTextures(1, &textureID);
     glDeleteBuffers(1, &quad_vertexbuffer);
     glDeleteVertexArrays(1, &VertexArrayID);
 
-    // Close OpenGL window and terminate GLFW
     glfwTerminate();
 
     return 0;

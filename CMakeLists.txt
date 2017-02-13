@@ -55,10 +55,10 @@ add_executable(projektGrafika
 	common/text2D.hpp
 	common/text2D.cpp
 	
-	projektGrafika/StandardShadingRTT.vertexshader
-	projektGrafika/StandardShadingRTT.fragmentshader
 	projektGrafika/Passthrough.vertexshader
-	projektGrafika/WobblyTexture.fragmentshader
+	projektGrafika/Passthrough.fragmentshader
+        projektGrafika/GameOfLife.vertexshader
+        projektGrafika/GameOfLife.fragmentshader
 )
 target_link_libraries(projektGrafika
 	${ALL_LIBS}
