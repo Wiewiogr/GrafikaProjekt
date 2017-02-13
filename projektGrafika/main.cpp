@@ -198,6 +198,7 @@ int main( int argc, char* argv[] )
 
     int currentTexture = 0;
     bool isActive = true;
+    bool isPressed = false;
     int number = 0;
     do{
         if((++number % 10) == 0 && isActive)
@@ -235,8 +236,14 @@ int main( int argc, char* argv[] )
         glfwPollEvents();
         if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
         {
-            isActive = !isActive;
+            isPressed = true;
             printf("space pressed\n");
+        }
+        if((glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE) && isPressed)
+        {
+            isPressed = false;
+            isActive = !isActive;
+            printf("space released\n");
         }
 
     } // Check if the ESC key was pressed or the window was closed
