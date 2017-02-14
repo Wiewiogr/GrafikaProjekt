@@ -1,5 +1,5 @@
-// Include standard headers
 #include <ctype.h>
+#include <cmath>
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
@@ -58,13 +58,101 @@ void drawQuadVertexBuffer(GLuint vertexBuffer)
     glDisableVertexAttribArray(0);
 }
 
+float x;
+float y;
+float maxXY;
+int viewScale = 1;
+
+void countMaxXY()
+{
+    if(viewScale == 1 )
+        maxXY  =  0;
+    else
+        maxXY = viewScale / 2;
+}
+
+void updateY()
+{
+    if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+    {
+        if(y < maxXY - 0.005)
+            y += 0.005;
+    }
+    if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+    {
+        if(y > 0 + 0.005 )
+            y -= 0.005;
+    }
+}
+
+void updateX()
+{
+    if(glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+    {
+        if(x > 0 + 0.005)
+            x -= 0.005;
+    }
+
+    if(glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+    {
+        if(x < maxXY - 0.005)
+            x += 0.005;
+    }
+}
+
+bool spacePressedHandling(bool isActive)
+{
+    static bool isPressed = false;
+
+    if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+    {
+        isPressed = true;
+    }
+    if((glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE) && isPressed)
+    {
+        isPressed = false;
+        return !isActive;
+    }
+    return isActive;
+}
+
+
+void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
+{
+
+    if(yoffset > 0)
+    {
+        if(viewScale < 16)
+        {
+            viewScale *= 2;
+            x *= 2;
+            y *= 2;
+            countMaxXY();
+        }
+    }
+    else
+    {
+        if(viewScale > 1)
+        {
+            viewScale /= 2;
+            x /= 2;
+            y /= 2;
+        }
+        if(viewScale == 1)
+        {
+            x = 0;
+            y = 0;
+        }
+        countMaxXY();
+    }
+}
+
 int main( int argc, char* argv[] )
 {
     int c;
 
     glm::mat3 aliveCondition(0);
     glm::mat3 deathCondition(0);
-    int scale = 1;
     int fps = 20;
     while ((c = getopt (argc, argv, "a:d:s:f:")) != -1)
     {
@@ -85,7 +173,7 @@ int main( int argc, char* argv[] )
             }
             break;
         case 's':
-            scale = atoi(optarg);
+            viewScale = atoi(optarg);
             break;
         case 'f':
             fps = atoi(optarg);
@@ -119,9 +207,10 @@ int main( int argc, char* argv[] )
     }
     glfwMakeContextCurrent(window);
 
+    glfwSetScrollCallback(window, scrollCallback);
     // We would expect width and height to be 1024 and 768
     int windowWidth = 1024;
-    int windowHeight = 768;
+    int windowHeight = 512;
 
     glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
 
@@ -190,13 +279,15 @@ int main( int argc, char* argv[] )
     GLuint deathConditionID = glGetUniformLocation(quad_programID, "deathCondition");
     GLuint timeID = glGetUniformLocation(quad_programID, "time");
     GLuint scaleID = glGetUniformLocation(programID, "scale");
+    GLuint xID = glGetUniformLocation(programID, "x");
+    GLuint yID = glGetUniformLocation(programID, "y");
 
     int currentTexture = 0;
     bool isActive = true;
-    bool isPressed = false;
     int number = 0;
     float delta = 1.0/fps;
     float lastUpdateTime = glfwGetTime();
+    countMaxXY();
 
     do{
         if((glfwGetTime()- lastUpdateTime) > delta)
@@ -211,7 +302,6 @@ int main( int argc, char* argv[] )
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, textures[!currentTexture]);
 
-                // Set our "front" sampler to user Texture Unit 0
                 glUniformMatrix3fv(aliveConditionID, 1, GL_FALSE, &aliveCondition[0][0]);
                 glUniformMatrix3fv(deathConditionID, 1, GL_FALSE, &deathCondition[0][0]);
                 glUniform1i(textureID, 0);
@@ -226,7 +316,9 @@ int main( int argc, char* argv[] )
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUseProgram(programID);
-        glUniform1f(scaleID, float(1.0/scale));
+        glUniform1f(scaleID, float(1.0/viewScale));
+        glUniform1f(xID, x);
+        glUniform1f(yID, y);
         glUniform1i(textureID, 0);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, textures[!currentTexture]);
@@ -235,15 +327,10 @@ int main( int argc, char* argv[] )
 
         glfwSwapBuffers(window);
         glfwPollEvents();
-        if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        {
-            isPressed = true;
-        }
-        if((glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE) && isPressed)
-        {
-            isPressed = false;
-            isActive = !isActive;
-        }
+
+        updateX();
+        updateY();
+        isActive = spacePressedHandling(isActive);
 
     } // Check if the ESC key was pressed or the window was closed
     while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS &&

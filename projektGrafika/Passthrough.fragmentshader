@@ -5,8 +5,10 @@ in vec2 UV;
 out vec3 color;
 
 uniform float scale;
+uniform float x;
+uniform float y;
 uniform sampler2D front;
 
 void main(){
-	gl_FragColor = texture(front,UV*scale);
+    gl_FragColor = texture(front,(UV+ vec2(x,y))*scale );
 }
