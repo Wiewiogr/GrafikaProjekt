@@ -65,7 +65,8 @@ int main( int argc, char* argv[] )
     glm::mat3 aliveCondition(0);
     glm::mat3 deathCondition(0);
     int scale = 1;
-    while ((c = getopt (argc, argv, "a:d:s:")) != -1)
+    int fps = 20;
+    while ((c = getopt (argc, argv, "a:d:s:f:")) != -1)
     {
         switch (c)
         {
@@ -86,18 +87,12 @@ int main( int argc, char* argv[] )
         case 's':
             scale = atoi(optarg);
             break;
+        case 'f':
+            fps = atoi(optarg);
+            break;
+
         }
     }
-
-    for(int i = 0 ; i < 9; i++)
-    {
-        printf("%d : %lf\n", i, aliveCondition[i/3][i%3]);
-    }
-    for(int i = 0 ; i < 9; i++)
-    {
-        printf("%d : %lf\n", i, deathCondition[i/3][i%3]);
-    }
-    printf("scale : %d\n",scale);
 
     srand( time( NULL ) );
     // Initialise GLFW
@@ -115,7 +110,7 @@ int main( int argc, char* argv[] )
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     // Open a window and create its OpenGL context
-    window = glfwCreateWindow( 1024, 768, "Game of life", NULL, NULL);
+    window = glfwCreateWindow( 1024, 512, "Game of life", NULL, NULL);
     if( window == NULL ){
         fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
         getchar();
@@ -144,7 +139,7 @@ int main( int argc, char* argv[] )
     glBindVertexArray(VertexArrayID);
     // Ensure we can capture the escape key being pressed below
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-    // Set the mouse at the center of the screen
+
     glfwPollEvents();
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -177,7 +172,7 @@ int main( int argc, char* argv[] )
     // Always check that our framebuffer is ok
     if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         return false;
-    // The fullscreen quad's FBO
+
     static const GLfloat g_quad_vertex_buffer_data[] = {
         -1.0f, -1.0f, 0.0f,
          1.0f, -1.0f, 0.0f,
@@ -200,28 +195,34 @@ int main( int argc, char* argv[] )
     bool isActive = true;
     bool isPressed = false;
     int number = 0;
+    float delta = 1.0/fps;
+    float lastUpdateTime = glfwGetTime();
+
     do{
-        if((++number % 10) == 0 && isActive)
+        if((glfwGetTime()- lastUpdateTime) > delta)
         {
-            glBindFramebuffer(GL_FRAMEBUFFER, FBOs[currentTexture]);
-            glViewport(0,0,windowWidth,windowHeight);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glUseProgram(quad_programID);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, textures[!currentTexture]);
+            lastUpdateTime = glfwGetTime();
+            if(isActive)
+            {
+                glBindFramebuffer(GL_FRAMEBUFFER, FBOs[currentTexture]);
+                glViewport(0,0,windowWidth,windowHeight);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                glUseProgram(quad_programID);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, textures[!currentTexture]);
 
-            // Set our "front" sampler to user Texture Unit 0
-            glUniformMatrix3fv(aliveConditionID, 1, GL_FALSE, &aliveCondition[0][0]);
-            glUniformMatrix3fv(deathConditionID, 1, GL_FALSE, &deathCondition[0][0]);
-            glUniform1i(textureID, 0);
+                // Set our "front" sampler to user Texture Unit 0
+                glUniformMatrix3fv(aliveConditionID, 1, GL_FALSE, &aliveCondition[0][0]);
+                glUniformMatrix3fv(deathConditionID, 1, GL_FALSE, &deathCondition[0][0]);
+                glUniform1i(textureID, 0);
 
-            number %= 100;
-            glUniform1f(timeID, 0.5);
-            drawQuadVertexBuffer(quad_vertexbuffer);
-            glUseProgram(0);
-            currentTexture = 1 - currentTexture;
+                number %= 100;
+                glUniform1f(timeID, 0.5);
+                drawQuadVertexBuffer(quad_vertexbuffer);
+                glUseProgram(0);
+                currentTexture = 1 - currentTexture;
+            }
         }
-
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUseProgram(programID);
@@ -237,13 +238,11 @@ int main( int argc, char* argv[] )
         if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
         {
             isPressed = true;
-            printf("space pressed\n");
         }
         if((glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE) && isPressed)
         {
             isPressed = false;
             isActive = !isActive;
-            printf("space released\n");
         }
 
     } // Check if the ESC key was pressed or the window was closed
