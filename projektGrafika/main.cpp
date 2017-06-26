@@ -238,9 +238,16 @@ int main( int argc, char* argv[] )
 
     GLubyte* data = (GLubyte*)malloc(windowWidth*windowHeight*4*sizeof(GLubyte));
     int val;
-    for( int i = 0; i < windowWidth*windowHeight; i++)
+    for( int i = 0; i < (windowWidth*windowHeight)/2; i++)
     {
         if ((rand() % 100)> 50 ) val = 255; else val = 0;
+        data[i*4] = data[i*4+1] = data[i*4+2] = val;
+        data[i*4+3]= 255;
+    }
+    val = 0;
+    for( int i = (windowWidth*windowHeight)/2; i < (windowWidth*windowHeight); i++)
+    {
+        //jif ((rand() % 100)> 50 ) val = 255; else val = 0;
         data[i*4] = data[i*4+1] = data[i*4+2] = val;
         data[i*4+3]= 255;
     }

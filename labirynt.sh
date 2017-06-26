@@ -1,2 +1,2 @@
-bash run.sh -s2 -f10 -a12345 -d3
+bash run.sh -s2 -f100 -a12345 -d3
 

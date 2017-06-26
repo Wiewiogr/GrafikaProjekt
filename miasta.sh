@@ -1,2 +1,2 @@
-bash run.sh -s2 -f10 -a2345 -d45678
+bash run.sh -s2 -f5 -a2345 -d45678
 
